@@ -1,0 +1,8 @@
+venv/
+.env
+secrets.py
+__pycache__/
+*.pyc
+data/raw/listings.csv
+data/raw/snapshots.csv
+data/raw/*_history.csv

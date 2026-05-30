@@ -1,0 +1,6 @@
+requests
+brotli
+python-dotenv
+pandas
+jupyter
+scikit-learn
