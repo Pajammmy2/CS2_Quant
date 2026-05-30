@@ -8,3 +8,4 @@ data/raw/snapshots.csv
 data/raw/*_history.csv
 .DS_Store
 .claude/
+CLAUDE.md
