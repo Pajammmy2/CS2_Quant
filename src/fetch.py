@@ -278,6 +278,10 @@ LISTING_SKINS_DEEP = {
     "★ Flip Knife | Fade (Factory New)",
     "★ Karambit | Doppler (Factory New)",
     "★ M9 Bayonet | Doppler (Factory New)",
+
+    # Main hedonic-model target skin — pull deep past the cheapest page so the
+    # price/float range isn't truncated to just the low end (sort_by=lowest_price).
+    "AK-47 | Redline (Field-Tested)",
 }
 
 LISTINGS_FILE = "data/raw/listings.csv"
@@ -293,8 +297,14 @@ LISTINGS_HEADERS = [
 
 
 def fetch_csfloat_listings(skin_name, max_pages=3):
-    """Pull up to max_pages * 50 buy_now listings for one skin from CSFloat."""
+    """Pull up to max_pages * 50 buy_now listings for one skin from CSFloat.
+
+    CSFloat paginates with a `cursor` token returned in each response body —
+    NOT a page number. Passing an incrementing "page" param is silently
+    ignored and just re-returns page 1 every time.
+    """
     all_listings = []
+    cursor = None
 
     for page in range(max_pages):
         params = {
@@ -302,8 +312,10 @@ def fetch_csfloat_listings(skin_name, max_pages=3):
             "limit": 50,
             "sort_by": "lowest_price",
             "type": "buy_now",
-            "page": page,
         }
+        if cursor:
+            params["cursor"] = cursor
+
         response = requests.get(
             "https://csfloat.com/api/v1/listings",
             params=params,
@@ -323,11 +335,16 @@ def fetch_csfloat_listings(skin_name, max_pages=3):
             print(f"  HTTP {response.status_code} on page {page}, stopping.")
             break
 
-        page_listings = response.json().get("data", [])
+        body = response.json()
+        page_listings = body.get("data", [])
         all_listings.extend(page_listings)
 
         if len(page_listings) < 50:
             break  # fewer than a full page means no more results
+
+        cursor = body.get("cursor")
+        if not cursor:
+            break  # no cursor means no more pages
 
         time.sleep(1)  # ~1 req/sec
 
@@ -385,7 +402,7 @@ def fetch_all_listings():
             writer.writeheader()
 
         for skin in LISTING_SKINS:
-            max_pages = 4 if skin in LISTING_SKINS_DEEP else 3
+            max_pages = 8 if skin in LISTING_SKINS_DEEP else 3
             print(f"Fetching listings: {skin} (max {max_pages * 50} listings)")
             listings = fetch_csfloat_listings(skin, max_pages=max_pages)
 
@@ -404,22 +421,25 @@ def fetch_all_listings():
 
 
 # --- RUN ---
-# get_current_prices()          # old per-platform snapshot
-# take_snapshot()               # aggregate snapshot (steam/skinport/csfloat min+avg) — run daily if still needed
+# Guarded so `import fetch` (e.g. to reuse fetch_csfloat_listings elsewhere)
+# never silently triggers a live API run against listings.csv.
+if __name__ == "__main__":
+    # get_current_prices()          # old per-platform snapshot
+    # take_snapshot()               # aggregate snapshot (steam/skinport/csfloat min+avg) — run daily if still needed
 
-fetch_all_listings()          # per-listing CSFloat data for hedonic model — run this
+    fetch_all_listings()          # per-listing CSFloat data for hedonic model — run this
 
-# for skin in skins:            # pull full steam history for all skins
-#     data = get_price_history(skin)
-#     if "prices" in data:
-#         save_history(skin, data["prices"])
-#     else:
-#         print(f"{skin} → failed, got: {data}")
-#     time.sleep(5)
+    # for skin in skins:            # pull full steam history for all skins
+    #     data = get_price_history(skin)
+    #     if "prices" in data:
+    #         save_history(skin, data["prices"])
+    #     else:
+    #         print(f"{skin} → failed, got: {data}")
+    #     time.sleep(5)
 
-# skin = "AWP | Neo-Noir (Field-Tested)"   # pull history for single skin
-# data = get_price_history(skin)
-# if "prices" in data:
-#     save_history(skin, data["prices"])
-# else:
-#     print(f"failed, got: {data}")
+    # skin = "AWP | Neo-Noir (Field-Tested)"   # pull history for single skin
+    # data = get_price_history(skin)
+    # if "prices" in data:
+    #     save_history(skin, data["prices"])
+    # else:
+    #     print(f"failed, got: {data}")
