@@ -266,6 +266,15 @@ LISTING_SKINS = [
     "★ Karambit | Doppler (Factory New)",
     "★ M9 Bayonet | Doppler (Factory New)",
     "Glock-18 | Gamma Doppler (Factory New)",
+
+    # --- Driver Gloves: solid-color finishes, no pattern/seed effect — float should be
+    # the whole story here. Field-Tested only, to test within-tier float sensitivity
+    # the same way as AK Redline FT (where within-tier float showed weak R^2).
+    # Crimson Weave / Convoy dropped — too illiquid (21 / 8 FT listings, R^2 pure noise).
+    "★ Driver Gloves | King Snake (Field-Tested)",
+    "★ Driver Gloves | Overtake (Field-Tested)",
+    "★ Driver Gloves | Racing Green (Field-Tested)",
+    "★ Driver Gloves | Snow Leopard (Field-Tested)",
 ]
 
 # Pattern/phase skins get deeper pagination — rare seeds (blue gems, full fades, Sapphires)
@@ -282,7 +291,59 @@ LISTING_SKINS_DEEP = {
     # Main hedonic-model target skin — pull deep past the cheapest page so the
     # price/float range isn't truncated to just the low end (sort_by=lowest_price).
     "AK-47 | Redline (Field-Tested)",
+
+    # Driver Gloves — liquid finishes only (King Snake/Overtake/Racing Green/Snow Leopard
+    # each had a full 50-listing first page on CSFloat; Crimson Weave/Convoy did not).
+    "★ Driver Gloves | King Snake (Field-Tested)",
+    "★ Driver Gloves | Overtake (Field-Tested)",
+    "★ Driver Gloves | Racing Green (Field-Tested)",
+    "★ Driver Gloves | Snow Leopard (Field-Tested)",
 }
+
+# --- CS2 Season 5 Armory skins (Arabesque + Spy Tech collections, added 2026-07-08) ---
+# NOT wired into LISTING_SKINS yet — Armory-exclusive skins are typically untradeable/
+# unmarketable for a period after release, and CSFloat returned zero buy_now listings
+# for every name below as of 2026-07-14. Names are best-effort from web sources (not
+# verified against CSFloat) — re-check market_hash_name spelling once these go tradeable.
+ARMORY_CANDIDATES_ARABESQUE = [
+    "AWP | Sovereign Flame",
+    "AK-47 | Consequence of the Jinn",
+    "Desert Eagle | Eastern Enigma",
+    "M4A4 | Falak",
+    "AUG | Lapis Lazuli",
+    "P250 | Lotus Imprint",
+    "Glock-18 | Ifrit Lattice",
+    "MAC-10 | Arabesque Mosaic",
+    "Tec-9 | Sultan",
+    "Sawed-Off | Lunar Wyrm",
+    "FAMAS | Snake Song",
+    "Five-SeveN | Desert Seal",
+    "Dual Berettas | Mystic Conjunction",
+    "SCAR-20 | Sirocco Script",
+    "MP9 | Dune Asp",
+    "PP-Bizon | Traitor",
+    "Nova | Morning Sun",
+]
+
+ARMORY_CANDIDATES_SPY_TECH = [
+    "Glock-18 | Ghost Protocol",
+    "AK-47 | AUTOEXEC",
+    "M4A1-S | Fatal Glitch",
+    "USP-S | Spiral Glitch",
+    "AWP | Black Box",              # unconfirmed weapon/finish pairing — verify before use
+    "Nova | Smart Gun",
+    "CZ75-Auto | Hydraulics",
+    "M4A4 | Dark Operative",
+    "R8 Revolver | Monarch",
+    "MP9 | Spy Prototype",
+    "AUG | Signal Scanner",
+    "MAC-10 | Video Cam",
+    "MP7 | Base 2",                 # unconfirmed finish name — verify before use
+    "XM1014 | Black Site",
+    "Tec-9 | Perimeter",
+    "SCAR-20 | Arctic Camo Panels",
+    "FAMAS | Corp Defense",
+]
 
 LISTINGS_FILE = "data/raw/listings.csv"
 LISTINGS_HEADERS = [
