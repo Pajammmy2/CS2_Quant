@@ -146,11 +146,65 @@ Results, raw-pooled R² vs. snapshot-normalized R², sorted by normalized R²:
 
 ---
 
+## 2026-08-30 — Full-feature gradient boosting model matches CSFloat's own predicted price overall, but loses badly on pattern skins with thin data
+
+New model (`src/model.py`), separate from the per-skin float regressions above. One
+`HistGradientBoostingRegressor` trained on log(price_usd) across all 25 skins at once,
+using every feature we collect: float_value, paint_seed, paint_index, phase,
+is_stattrak, is_souvenir, rarity, quality, sticker_count, sticker_total_value_usd,
+market_hash_name. 80/20 train/test split (stratified by skin), n=7,761 listings total,
+1,553 in the test set.
+
+**Headline result — beats CSFloat's black-box predictor on average:**
+
+| | MAE | MAPE |
+|---|---:|---:|
+| Our model | $139.69 | 13.0% |
+| CSFloat's `csfloat_predicted_price_usd` | $148.23 | 13.6% |
+| log-scale R² | 0.976 | |
+
+**But this hides a big split by skin type.** Per-skin MAPE (see `run()` output / analysis
+below):
+- Non-pattern skins (Redline, Asiimov, Neo-Noir, Hyper Beast, Printstream, Blaze, Gamma
+  Doppler, gloves): our model matches or beats CSFloat, often by a lot (Redline 4.7% vs
+  8.3%; Blaze 7.4% vs 11.6%; Gamma Doppler 8.8% vs 10.7%).
+- Pattern/seed skins are where it breaks: **★ Karambit | Case Hardened is 65.9% MAPE for
+  our model vs 37.0% for CSFloat** — almost 2x worse. AK-47 Case Hardened, Karambit Fade,
+  and the two illiquid glove finishes (Crimson Weave n=4, Convoy n=2 in test) are the
+  other clear losses.
+
+**Why:** permutation importance shows `market_hash_name` completely dominates (0.81 drop
+in log R² when shuffled), `float_value` is a distant second (0.016), and `paint_seed` /
+`paint_index` barely register (0.001–0.002) despite being the whole story for Case
+Hardened/Fade/Doppler pricing. Working theory: blue-gem-tier Case Hardened seeds are a
+short, non-contiguous list of "magic numbers" (specific seed IDs worth 10–50x a normal
+seed) — a raw integer paint_seed feature gives a tree nothing smooth to split on, and with
+only ~200 total listings for Karambit Case Hardened (43 in test), there isn't enough data
+per seed value for the model to memorize which specific seeds are the valuable ones.
+This is exactly the seed-based feature engineering the original project plan called for
+(is_blue_gem flags etc.) and confirms it's necessary, not optional, before pattern skins
+can be trusted from either model.
+
+**Takeaway:** the model is legitimately good — and already the stronger of the two on
+most skins — for skins where float/attributes are the price driver. It should not be
+trusted yet for pattern-dependent skins. Predictions saved to
+`data/processed/model_predictions.csv` (test set only, with residuals vs. both our model
+and CSFloat's).
+
+---
+
 ## Open items carried forward (not findings yet, just tracked)
 
 - ~~Re-run the float regression across all "ready" non-pattern skins~~ — done above.
-- Build seed-based features for pattern skins before trusting their R².
-- Benchmark our float-only model's error against CSFloat's own `csfloat_predicted_price_usd`
-  column (already collected, unused so far).
-- `README.md` is still an empty placeholder — write it once the CSFloat benchmark is in,
-  using this log as source material.
+- ~~Benchmark our model's error against CSFloat's own `csfloat_predicted_price_usd`
+  column~~ — done above, we beat it 13.0% vs 13.6% MAPE overall.
+- **Build seed-based features for pattern skins** (is_blue_gem for Case Hardened, fade %
+  for Fade, phase-tier dummies for Doppler) — now confirmed necessary: raw paint_seed is
+  nearly useless to the model (importance 0.001) despite driving most of the price
+  variance for these skins. This is the clear next step.
+- Consider a per-skin-family model (or at least separate pattern-skin handling) instead of
+  one global model, since pattern skins need fundamentally different features than
+  float-driven skins.
+- `README.md` is still an empty placeholder — write it once the seed-feature pass is in,
+  using this log (float findings + CSFloat benchmark + seed-feature results) as source
+  material.
